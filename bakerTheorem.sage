@@ -5,14 +5,14 @@ def flatten_list(nested_list):
 
 
 # SageMath에서 변수를 정의합니다.
-var("x, y, b, L, n, h")
+var("x, y, z, b, L, n, h")
 
-L = 6
+L = 3#6
 n = 2
-h = 3
-D = 3
+h = 1#3
+D = 1#3
 # over derivate f
-d = 1
+d = 0
 
 def bakerAuxiliaryFunction(L, n, h, D):
     c = matrix(
@@ -32,10 +32,10 @@ def bakerAuxiliaryFunction(L, n, h, D):
         sum(c[s, t] * 3 ^ (s * x) * 2 ^ (t * x) for s in range(L + 1)) for t in range(L + 1)
     )
     # 함수 f에서 가장 윗 계수 c[L,L]을 -1로 대체합니다.
-    f = f.subs(c[L, L] == -1)
+    f_AntiUnitaire = f.subs(c[L, L] == -1)
 
     # 함수를 x에 대해 D번까지 미분합니다.
-    df = [f.diff(x, i) for i in range(D + 1)]
+    df = [f_AntiUnitaire.diff(x, i) for i in range(D + 1)]
 
     # 미분한 결과를 출력합니다.
     print(latex(df))
@@ -105,15 +105,15 @@ def bakerAuxiliaryFunction(L, n, h, D):
     # print("------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 
 
-    def linear_equations_to_matrix(eqns, c):
-        c= c[:-1]
+    def linear_equations_to_matrix(eqns, c_list):
+        c_list= c_list[:-1]
         # 각 방정식을 재배열합니다.
         print([eq.lhs() for eq in eqns])
         v=[]
         for eq in eqns:
-            substituting = dict(zip(c, [0] * len(c)))
+            substituting = dict(zip(c_list, [0] * len(c_list)))
             v.append(-eq.lhs().subs(substituting))
-        return (matrix(ZZ, [[eq.lhs().coefficient(v) for v in c] for eq in eqns]),vector(ZZ,v), c)
+        return (matrix(ZZ, [[eq.lhs().coefficient(v) for v in c_list] for eq in eqns]),vector(ZZ,v), c_list)
 
     (A, v,u) = linear_equations_to_matrix(eqs_flat, flatten_list(c))
 
@@ -144,35 +144,43 @@ def bakerAuxiliaryFunction(L, n, h, D):
     # r1, r2, ..., rn까지의 변수 리스트 생성
     # r_vars = [var(f'r{i}') for i in range(1, variableLiberty+1)]  
 
-    solution = [{u[i]:solution[i]} for i in range(len(u))]
+    OneDimensionalSolution = [{u[i]:solution[i]} for i in range(len(u))]
     # 해를 출력합니다.
     print(solution)
     # print(latex(solution))
     print(
         "------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
     )
+    logsbyderivation = [(log(i))^y for i in A[1]]
+    TwoDimensionalSolution = [{u[i]:solution[i]*logsbyderivation[i]} for i in range(len(u))]
+    TwoDimensionalSolution.append({c[L,L]:(-1)*(L*log(6))^y})
     # 해를 함수로 변환합니다.
-    f_sol = f.subs(solution)
-    return f_sol
+    f_sol = f_AntiUnitaire.subs(OneDimensionalSolution)
+    df_sol = f.subs(TwoDimensionalSolution)
+    return (f_sol,df_sol)
 
 
-f = bakerAuxiliaryFunction(L, n, h, D)
-if f is not None:
+(f_sol,fxy_sol) = bakerAuxiliaryFunction(L, n, h, D)
+if f_sol is not None:
     
     # 해를 함수로 변환합니다.
-    df_sol = [f.diff(x, i) for i in range(D + d + 1)]
+    df_sol = [f_sol.diff(x, i) for i in range(D + d + 1)]
     # print(latex(df_sol))
     print(
         "------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
     )
-
+    print(fxy_sol)
     # 확인합니다.
     for i in range(D + d + 1):
-        for l in range(-3, h + 3):
+        for l in range(-d-1, h + d+1):
             print(f"f^({i})({l}) =~ ",df_sol[i](x=l).n() , " = ", df_sol[i](x=l))
 
     # 그래픽을 출력합니다.
-    g = Graphics()
-    for i in range(D + d + 1):
-        g += plot(df_sol[i](x=x), (x, -(0.01), h + 0.01), rgbcolor=hue(i * pi))
-    g.show()
+    # g = Graphics()
+    # for i in range(D + d + 1):
+        # g += plot(df_sol[i](x=x), (x, -(0.01), h + 0.01), rgbcolor=hue(i * pi))
+    # g.show()
+
+    # 3D plot
+    P = implicit_plot3d(z==fxy_sol(x=x,y=y), (x,-1 , 2*h + 0.01), (y, 0, D + d + 1), (z,-1,1))
+    P.show()
