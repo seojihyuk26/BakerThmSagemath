@@ -151,8 +151,8 @@ def Balanced_pair_polynomial(l):
     # print("balanced pair polynomial:", l[0], l[1])
     # print("balanced pair polynomial length:", len(l[0]))
     for i in range(len(l[0])):
-        balanced_polynomial += (int(l[0][i]) - int(l[1][i])) * x ** Integer(i)
-    return balanced_polynomial
+        balanced_polynomial += (int(l[0][i]) - int(l[1][i])) * x ** Integer(-i)
+    return balanced_polynomial * x ** Integer(len(l[0])-1)
 
 
 def Balanced_pair_polynomial_dictionary(s):
@@ -385,7 +385,7 @@ def custom_latex_method(self):
 
 WordMorphism._latex_ = custom_latex_method
 
-def BalancedPair_morphism_latex(morphism_dict):
+def BalancedPair_morphism_latex(morphism_dict,shift=1):
     """
     Custom LaTeX representation for BalancedPair.
 
@@ -402,15 +402,15 @@ def BalancedPair_morphism_latex(morphism_dict):
     print("s:", latex(s))
     print("s is primitive:", s.is_primitive(), r" \\")
     print("F[0:]: $", latex(F), r" $ \\")
-    print("F[1:]: $", latex(F[1:]), r" $ \\")
+    print("F["+str(shift)+":]: $", latex(F[shift:]), r" $ \\")
 
-    result = Balanced_pair_alphabet(F, F[1:])
+    result = Balanced_pair_alphabet(F, F[shift:])
     print("balanced pair alphabet by shift: $$", latex(list(result)), r"$$ \\")
 
     mor = Whole_irreducible_balanced_pair(s, result, 30)
     mor._codomain = mor.domain()
-    print("$$",custom_latex_dictionary(Balanced_pair_polynomial_dictionary(mor.codomain().alphabet())), r"$$ \\")
-    print(latex(mor))
+    print("Balanced Pair to Polynomials: $$",custom_latex_dictionary(Balanced_pair_polynomial_dictionary(mor.codomain().alphabet())), r"$$ \\")
+    print("Lifted Morphism: ",latex(mor))
 
     incidence = lifted_morphism_matrix(mor)
     if not mor.is_endomorphism():
@@ -420,9 +420,9 @@ def BalancedPair_morphism_latex(morphism_dict):
     else:
         print("lifted morphism is primitive:", mor.is_primitive(), r" \\")
 
-    # print("incidence:", incidence)
+    # print("incidence:", incidence) mor._morph
 
-    G = lifted_morphism_graph(mor._morph)
+    G = lifted_morphism_graph(incidence)
     # filename = gen_html_code(
     #     G, vertex_labels=True, gravity=0.05, force_spring_layout=True, charge=-500
     # )
@@ -440,5 +440,26 @@ def BalancedPair_morphism_latex(morphism_dict):
     os.system("display /tmp/dom.png &")
     print(r"\noindent\makebox[\linewidth]{\rule{\paperwidth}{0.4pt}}")
 
+def BalancedPair_shift_latex(num,shift):
+    print("F[0:]: $", latex(num), r" $ \\")
+    print("F["+str(shift)+":]: $", latex(num[shift:]), r" $ \\")
+    result = Balanced_pair_alphabet(Word(num,alphabet=[i for i in set(str(num))]), Word(num[shift:],alphabet=[i for i in set(str(num))]))
+    print("balanced pair alphabet by shift: $$", latex(list(result)), r"$$ \\")
+    print("Balanced Pair to Polynomials: $$",custom_latex_dictionary(Balanced_pair_polynomial_dictionary(result)), r"$$ \\")
 # Example usage:
-BalancedPair_morphism_latex({"0": "012", "1": "021","2": "01","3":"2"})
+BalancedPair_morphism_latex({"0": "020", "1": "01","2": "01"},1)
+BalancedPair_morphism_latex({"0": "020", "1": "01","2": "01"},3)
+# x = RealField(200)(3).nth_root(2)
+# F = x.str(base=2)[2:]
+# BalancedPair_shift_latex(F,1)
+# BalancedPair_shift_latex(F,2)
+# BalancedPair_shift_latex(F,3)
+# BalancedPair_shift_latex(F,4)
+# BalancedPair_shift_latex(F,5)
+# BalancedPair_shift_latex(F,6)
+
+# print("F[0:]: $", latex(F), r" $ \\")
+# print("F[1:]: $", latex(F[1:]), r" $ \\")
+# result = Balanced_pair_alphabet(Word(F,alphabet=["0","1"]), Word(F[1:],alphabet=["0","1"]))
+# print("balanced pair alphabet by shift: $$", latex(list(result)), r"$$ \\")
+# print("$$",custom_latex_dictionary(Balanced_pair_polynomial_dictionary(result)), r"$$ \\")
